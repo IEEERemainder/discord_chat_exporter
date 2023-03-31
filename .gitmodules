@@ -1,0 +1,3 @@
+[submodule "discord_api"]
+	path = discord_api
+	url = https://github.com/IEEERemainder/discord_api
