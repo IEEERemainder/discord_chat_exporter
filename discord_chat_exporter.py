@@ -97,7 +97,7 @@ if format == "json":
 elif format == "datajs":
     with open(fileName, "w", encoding="utf-8") as f:
         f.write("DATA = [")
-        common_logic(jsonfn, api.basic_readable_message, [f]) 
+        common_logic(jsonfn, args =api.basic_readable_message, [f]) 
         f.write("];")
 elif format == "sqlite":
     import sqlite3
