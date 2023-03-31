@@ -18,6 +18,7 @@ Certain activities via API directly, unattainable from official Discord client, 
 
 ## TODOS
 - Mace better interface? (but it suits me)
+- Allow start from some message (download new messages of channel which has been previously downloaded)
 - Implement full database schema
 
 ## Have ideas or need help? 
