@@ -9,7 +9,7 @@
 - Not quite fast, use other programs if it's crucial
 
 ## Requirements:
-Python 3+, `[discord_api](https://github.com/IEEERemainder/discord_api)`
+Python 3+, [discord_api](https://github.com/IEEERemainder/discord_api)
 
 ## Run guide
 Download [discord_api](https://github.com/IEEERemainder/discord_api), put `discord_api.py` in one folder with `gui.py` or/and `discord_chat_exporter.py`, run `gui.py` for GUI (graphical interface) or use command-line based `discord_chat_exporter.py [tocen] [sqlite|json|datajs] [fileName] [channelId1,channelId2,...channelIdN]`
@@ -18,11 +18,7 @@ Certain activities via API directly, unattainable from official Discord client, 
 
 ## TODOS
 - Mace better interface? (but it suits me)
-- Simple analysis of frequent words, concordances, count by user, dialogues detection (if server log) 
-- Word wrap by visible length, not character count (monospace font is unavailable, `select` is OS-dependant component)
-- Probably replace `select` with CSS friendly component
-- Extend browsers support?
-- Adaptive page layout? (PC only for now)
+- Implement full database schema
 
 ## Have ideas or need help? 
 Create issue or concat me via nosare@yandex.ru or Interlocked#6505
