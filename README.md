@@ -20,6 +20,7 @@ Certain activities via API directly, unattainable from official Discord client, 
 - Mace better interface? (but it suits me)
 - Allow start from some message (download new messages of channel which has been previously downloaded)
 - Implement full database schema
+- Move underlying layer logic to the discord_chat_exporter.py, allowing to export whole server (whole Dm, only people, ...) with no help of gui.py (G819821, DM, DM_PEOPLE, DM_GROUPS)
 
 ## Have ideas or need help? 
 Create issue or concat me via nosare@yandex.ru or Interlocked#6505
