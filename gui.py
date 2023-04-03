@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
-import discord_api
+import discord_api.discord_api as discord_api
 import os
 
 root = tk.Tk()
@@ -166,7 +166,7 @@ def processUnderlying():
             
 def exportBase(fmt):
     underlingProcessed = processUnderlying()
-    os.system(pythonPath + " discord_chat_exporter.py " + tocenVar.get() + " " + fmt + " " + fileNameVar.get() + " " + ','.join([underlingProcessed[i] for i in lb.curselection()]) + " & pause")
+    os.system(pythonPath + " discord_chat_exporter.py " + tocenVar.get() + " " + fileNameVar.get() + " -fmt " + fmt + " -c " + ' '.join([underlingProcessed[i] for i in lb.curselection()]) + " & pause")
 def exportToSqlite(*a):
     exportBase("sqlite")
 def exportToJson(*a):
