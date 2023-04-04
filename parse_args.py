@@ -129,6 +129,12 @@ def parse_args():
         help = "Override begin of channels to export"
     )
     parser.add_argument(
+        '-estimate', '--estimate',
+        dest = "estimate",
+        action = "store_true",
+        help = "Search is quite expensive action"
+    )
+    parser.add_argument(
         '-b', '--before-date',
         dest = "beforeSnowflake",
         type = discord_chat_exporter.dateStrToSnowflake,
