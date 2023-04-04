@@ -142,8 +142,8 @@ tk.Label(root, text="Export").pack(side='top')
 fileNameVar = tk.StringVar()   
 tk.Entry(root, textvariable = fileNameVar).pack(side='top')
 
-pythonPath = "python3" # assume you have it in PATH. Change to r"C:\Python310\python.exe" or something if not
-
+#pythonPath = "python3" # assume you have it in PATH. Change to r"C:\Python310\python.exe" or something if not
+pythonPathVar = tk.StringVar()
 def processUnderlying():
     global underlying
     a = []
@@ -170,8 +170,9 @@ def processUnderlying():
             
 def exportBase(fmt):
     underlingProcessed = processUnderlying()
-    cmdargs=[pythonPath, "discord_chat_exporter.py", tocenVar.get(), fileNameVar.get(), "-fmt", fmt, '-c', ' '.join([underlingProcessed[i] for i in lb.curselection()])]
-    print(cmdargs)
+    cmdargs=[pythonPathVar.get(), "discord_chat_exporter.py", tocenVar.get(), fileNameVar.get(), "-fmt", fmt, '-c']
+    cmdargs.extend(' '.join([underlingProcessed[i] for i in lb.curselection()]).split(' '))
+    #print(cmdargs)
     subprocess.Popen(cmdargs)
 def exportToSqlite(*a):
     exportBase("sqlite3")
@@ -186,5 +187,8 @@ tk.Button(root, text="SQLite", command=exportToSqlite).pack(side='top')
 tk.Button(root, text="json", command=exportToJson).pack(side='top')
 tk.Button(root, text=".data.js", command=exportToDataJs).pack(side='top')
 tk.Button(root, text="show ids", command=showIds).pack(side='top')
+
+tk.Label(root, text="Python path").pack(side='top')
+tk.Entry(root, text=pythonPathVar).pack(side='top')
 
 root.mainloop()
