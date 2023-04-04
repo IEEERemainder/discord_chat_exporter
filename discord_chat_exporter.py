@@ -26,7 +26,7 @@ def download(targets):
     supported_formats[args.format](targets)    
 
 def printProgress(currentChannelIndex, channelsCount, currentChannelId, downloadedCount, totalCount):
-    print(f'[{currentChannelIndex} / {channelsCount} {currentChannelId}] {downloadedCount} / {totalCount} ({round(downloadedCount / totalCount * 100, DIGITS_AFTER_DECIMAL_POINT)} %)', end='\r')
+    print(f'[{currentChannelIndex} / {channelsCount} {currentChannelId}] {downloadedCount} / {totalCount} ({round(downloadedCount / totalCount * 100 if totalCount != 0 else 0, DIGITS_AFTER_DECIMAL_POINT)} %)', end='\r')
 
 def common_logic(targets, fn, projector=discord_api.nop, onChannelFinished=discord_api.nop, args2=[]):
     currentChannelIndex = 0
@@ -213,7 +213,6 @@ api = None
 if __name__ == '__main__':
     targets = []
     args = parse_args.parse_args()
-    print(args.channels)
     initApi()
 
     if args.downloadAllDm or args.downloadWholeAccount: 
