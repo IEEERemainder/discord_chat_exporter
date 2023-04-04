@@ -32,7 +32,6 @@ def common_logic(targets, fn, projector=discord_api.nop, onChannelFinished=disco
     currentChannelIndex = 0
     channelsCount = len(targets)
     processedChannels = []
-    t = api.query(api.baseUrl + f"/channels/{channelId}")
     for channelId in targets:
         if channelId in processedChannels:
             print(f'skiping {channelId} as it has been already processed')
