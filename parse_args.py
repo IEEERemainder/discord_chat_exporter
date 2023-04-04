@@ -1,4 +1,5 @@
 import argparse
+import discord_chat_exporter
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -29,7 +30,7 @@ def parse_args():
         '-m', '--mode',
         dest = "modes",
         nargs = '+',
-        action = 'append',
+        action = 'extend',
         choices = discord_chat_exporter.modes.keys(),
         default = ["download"],
         metavar = ("mode=" + "|".join(discord_chat_exporter.modes), "mode"),
@@ -41,7 +42,7 @@ def parse_args():
         dest = "channels",
         type = discord_chat_exporter.parseChannel, 
         nargs = '+',
-        action = 'append',
+        action = 'extend',
         metavar = 'channelId|channelName|guildName/channelName',
         default = [],
         help = "Save messages of channels with specified id(s)"
@@ -80,7 +81,7 @@ def parse_args():
         help = "Set a guidName equivalent for DM since it's processed by --smart-select too",
     )
     parser.add_argument(
-        '-s-f', '--smart-filter',
+        '-s-flt', '--smart-filter',
         dest = "smartFilterCode",
         metavar = "pythonCode",
         help = "Filter messages by python function of signature (message : dict) -> bool. If you gonna perform multiple queries better download all messages and then query local database (if discord's own search doesn't match). Runs on every message, so consider search if looking for specific messages"
@@ -89,7 +90,7 @@ def parse_args():
         '-s-i', '--smart-include',
         dest = "smartFilterLibs",
         nargs = '+',
-        action = 'append',
+        action = 'extend',
         default=[],
         metavar = 'library.py',
         help = "Execute --smart-* dependency scripts by their paths. Probably not really secure if you have no idea that do they do [or their own dependencies]{1,}"
@@ -124,12 +125,14 @@ def parse_args():
         dest = "afterSnowflake",
         type = discord_chat_exporter.dateStrToSnowflake,
         metavar = "isoDate",
+        default=0,
         help = "Override begin of channels to export"
     )
     parser.add_argument(
         '-b', '--before-date',
         dest = "beforeSnowflake",
         type = discord_chat_exporter.dateStrToSnowflake,
+        default=-1,
         metavar = "isoDate",
         help = "Override end of channels to export"
     )
@@ -189,7 +192,7 @@ def parse_args():
         dest = "searchChannels",
         type = int,
         nargs = '+',
-        action = 'append',
+        action = 'extend',
         default = [],
         metavar="channel",
         help = "Filter messages in channels with specified ids"

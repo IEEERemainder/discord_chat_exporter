@@ -3,6 +3,8 @@ from tkinter import ttk
 from tkinter import messagebox
 import discord_api.discord_api as discord_api
 import os
+import subprocess
+import sys
 
 root = tk.Tk()
 
@@ -17,7 +19,9 @@ lb.pack(side='left',fill="both", expand=1)
 
 tk.Label(root, text="Tocen").pack(side='top')
 
-tocenVar = tk.StringVar()   
+tocenVar = tk.StringVar()
+if len(sys.argv) == 2:
+   tocenVar.set(sys.argv[1])
 tk.Entry(root, textvariable = tocenVar, show="*").pack(side='top')
 
 tk.Label(root, text="Manage selection").pack(side='top') 
@@ -138,7 +142,7 @@ tk.Label(root, text="Export").pack(side='top')
 fileNameVar = tk.StringVar()   
 tk.Entry(root, textvariable = fileNameVar).pack(side='top')
 
-pythonPath = "python" # assume you have it in PATH. Change to r"C:\Python310\python.exe" or something if not
+pythonPath = "python3" # assume you have it in PATH. Change to r"C:\Python310\python.exe" or something if not
 
 def processUnderlying():
     global underlying
@@ -160,15 +164,17 @@ def processUnderlying():
         elif type(u) == type(''):
             getGuildChannels(next((g for g in guilds if g["id"] == u)))
         underlying = underlying[1:]
-        a.append(','.join([str(x) for x in underlying]))
+        a.append(' '.join([str(x) for x in underlying]))
     underlying = copy
     return a
             
 def exportBase(fmt):
     underlingProcessed = processUnderlying()
-    os.system(pythonPath + " discord_chat_exporter.py " + tocenVar.get() + " " + fileNameVar.get() + " -fmt " + fmt + " -c " + ' '.join([underlingProcessed[i] for i in lb.curselection()]) + " & pause")
+    cmdargs=[pythonPath, "discord_chat_exporter.py", tocenVar.get(), fileNameVar.get(), "-fmt", fmt, '-c', ' '.join([underlingProcessed[i] for i in lb.curselection()])]
+    print(cmdargs)
+    subprocess.Popen(cmdargs)
 def exportToSqlite(*a):
-    exportBase("sqlite")
+    exportBase("sqlite3")
 def exportToJson(*a):
     exportBase("json")
 def exportToDataJs(*a):

@@ -4,21 +4,17 @@ import sys
 import datetime
 import re
 import time
-import discord_chat_exporter_parse_args
-
-supported_formats = { # rename?
-    'sqlite3' : processSQLite3,
-    'datajs' : processDataJs,
-    'json' : processJson
-}
+import parse_args
+import os
 
 def showTargets(targets, estimate = False):
-    for t in targets:
-        d = estimate and api.get_message_count_json(t['id'], supressErrors = True)
-        print('guild_id' in t and t['guildId'] or 'DM', t['id'], 'message' in d and d['message'] or d['total_count'])
+    for channelId in targets:
+        d = estimate and api.get_channel_message_count_json(channelId, supressErrors = True)
+        t = api.query(api.baseUrl + f"/channels/{channelId}")
+        print('guild_id' in t and t['guildId'] or 'DM', channelId, 'message' in d and d['message'] or d['total_count'])
 
 def download(targets):
-    if args.format == 'auto'
+    if args.format == 'auto':
         if any((1 for x in ['sqlite3', 'db'] if args.path.endswith(x))):
             args.format = 'sqlite3'
         elif args.path.endswith('.data.js'):
@@ -29,34 +25,24 @@ def download(targets):
             raise Exception('Can\'t derive format from path. Check it or use --format [sqlite3|datajs|json]')
     supported_formats[args.format](targets)    
 
-modes = {
-    'showCandidates' : lambda targets: showTargets(targets, False), 
-    'showMessagesEstimate' : lambda targets: showTargets(targets, True),
-    'download' : download
-}
-
-attachmentTypes = ['link', 'embed', 'file', 'video', 'image', 'sound', 'sticker']
-
-DIGITS_AFTER_DECIMAL_POINT = 2 # change if exporting too many messages and need more precision? 
-
 def printProgress(currentChannelIndex, channelsCount, currentChannelId, downloadedCount, totalCount):
     print(f'[{currentChannelIndex} / {channelsCount} {currentChannelId}] {downloadedCount} / {totalCount} ({round(downloadedCount / totalCount * 100, DIGITS_AFTER_DECIMAL_POINT)} %)', end='\r')
 
-def common_logic(targets, fn, projector=discord_api.nop, onChannelFinished=discord_api.nop, args=[]):
+def common_logic(targets, fn, projector=discord_api.nop, onChannelFinished=discord_api.nop, args2=[]):
     currentChannelIndex = 0
-    channelsCount = len(args.channels)
+    channelsCount = len(targets)
     processedChannels = []
-    for t in targets:
-        channelId = t['id']
+    t = api.query(api.baseUrl + f"/channels/{channelId}")
+    for channelId in targets:
         if channelId in processedChannels:
             print(f'skiping {channelId} as it has been already processed')
             continue
         processedChannels.append(channelId)
 
-        totalCountJSON = api.get_message_count_json(channelId, supressErrors = True)
+        totalCountJSON = api.get_channel_message_count_json(channelId, supressErrors = True)
         
         if 'message' in totalCountJSON:
-            print(f'error while exporing {channelId}: {totalCountJSON['message']}')
+            print(f'error while exporing {channelId}: {totalCountJSON["message"]}')
             continue
 
         totalCount = totalCountJSON['total_results']
@@ -70,15 +56,14 @@ def common_logic(targets, fn, projector=discord_api.nop, onChannelFinished=disco
                 channelId,
                 projector=projector, 
                 lastSnowflake=args.afterSnowflake ,
-                firstSnowflake=args.beforeSnowflake + (1 << 22) - 1, # low 22 bits are empty so what message with same timestamp will not be downloaded
+                firstSnowflake=args.beforeSnowflake != -1 and args.beforeSnowflake + (1 << 22) - 1 or -1, # low 22 bits are empty so what message with same timestamp will not be downloaded
                 filter_= args.messageFilter,
                 progressFn = progressFn
             ):
-            fn(targets, msg_chunk, channelId, *args)
+            fn(targets, msg_chunk, channelId, *args2)
             downloadedCount += len(msg_chunk)
-            progressFn(0, range(100 * 10), 0)
         currentChannelIndex += 1
-        onChannelFinished(*args)
+        onChannelFinished(*args2)
         print() # reset \r       
         
 def parse_datetime(v): 
@@ -86,12 +71,6 @@ def parse_datetime(v):
 
 def sqliteCommitChannel(cursor):
     cursor.connection.commit() # don't lost huge channels. Change if exporting too many small channels
-
-formatToExt = {
-    'json' : 'json',
-    'datajs' : 'data.js',
-    'sqlite' : 'db'
-}
 
 def processSQLite3(targets):
     import sqlite3
@@ -116,7 +95,7 @@ def processSQLite3(targets):
         #cursor.connection.commit() # don't lost any progress?
         # TODO: scip already exist messages, SELECT MAX(id) FROM messages WHERE channelId = :chId, lastSnowflace = :result
 
-    common_logic(targets, sqliteFn, onChannelFinished=sqliteCommitChannel, args=[cur])
+    common_logic(targets, sqliteFn, onChannelFinished=sqliteCommitChannel, args2=[cur])
 
 
 def jsonfn(targets, msg_chunc, channelId, file):
@@ -128,12 +107,12 @@ def jsonfn(targets, msg_chunc, channelId, file):
 def processJson(targets):
     with open(args.path, 'w', encoding = 'utf-8') as f:
         f.write('[')
-        common_logic(targets, jsonfn, args = [f])  
+        common_logic(targets, jsonfn, args2 = [f])  
         f.write(']')
 def processDataJs(targets):
     with open(args.path, 'w', encoding='utf-8') as f:
         f.write('DATA = [')
-        common_logic(targets, jsonfn, api.BasicStringifiers.message, args = [f]) 
+        common_logic(targets, jsonfn, api.BasicStringifiers.message, args2 = [f]) 
         f.write('];')
 
 def getTimestampInSFromStr(date, utc=False):
@@ -148,6 +127,7 @@ def dateStrToSnowflake(x): # https://discord.com/developers/docs/reference#snowf
 def parseChannel(x): # channelId | channelName | guildName/channelId ?
     if re.match('^\d+$', x):
         return int(x)
+    initApi()
     x = x.strip()
     #raise Error('Parse channel from name is not implemented yet')
     # TODO: implement multiple layers comparation weakening? 
@@ -171,6 +151,7 @@ def parseChannel(x): # channelId | channelName | guildName/channelId ?
 def parseGuild(x):
     if re.match('^\d+$', x):
         return int(x)
+    initApi()
     x = x.strip()
     for guild in api.get('GUILDS'):
         if guild['name'].strip == x:
@@ -185,14 +166,60 @@ def parseUser(x):
         return int(x)
     raise Error('User search by username or nicname is not yet implemented')
 
+supported_formats = { # rename?
+    'sqlite3' : processSQLite3,
+    'datajs' : processDataJs,
+    'json' : processJson
+}
+
+modes = {
+    'showCandidates' : lambda targets: showTargets(targets, False), 
+    'showMessagesEstimate' : lambda targets: showTargets(targets, True),
+    'download' : download
+}
+
+attachmentTypes = ['link', 'embed', 'file', 'video', 'image', 'sound', 'sticker']
+
+DIGITS_AFTER_DECIMAL_POINT = 2 # change if exporting too many messages and need more precision? 
+
+formatToExt = {
+    'json' : 'json',
+    'datajs' : 'data.js',
+    'sqlite' : 'db'
+}
+
+class BasicRLRNotifier:
+    def __init__(self):
+        self.lastUrl = ''
+
+    def notify(self, api, url, seconds):
+        print()
+        print('waiting', seconds, 's for url', url)
+        print()
+        self.lastUrl = url
+        api.maxQueriesPerSecond = api.queriesPerCurrentSecond - 1
+
+    def tryRestoreState(self, api, url):
+        commonPrefix = os.path.commonprefix([self.lastUrl, url])
+        if len(commonPrefix) > len(api.baseUrl):
+            api.maxQueriesPerSecond = api.DISCORD_MAX_QUERIES_PER_SECOND
+
+def initApi():
+    global api
+    if api == None:
+        api = discord_api.DiscordApi(sys.argv[1], rateLimitReachedNotifier=BasicRLRNotifier())
+
+api = None
+
 if __name__ == '__main__':
     targets = []
+    args = parse_args.parse_args()
+    print(args.channels)
+    initApi()
 
-    api = discord_api.DiscordApi(args.token)
-
-    if args.downloadAllDM or args.downloadWholeAccount: 
+    if args.downloadAllDm or args.downloadWholeAccount: 
         targets.extend(api.get('DM'))
-    if not (args.downloadWholeAccount or args.downloadAllDM):
+    if not (args.downloadWholeAccount or args.downloadAllDm):
         if args.downloadDmTwosome:
             targets.extend(api.get('DM_TWOSOME'))
         if args.downloadDmGroups:
@@ -238,6 +265,8 @@ if __name__ == '__main__':
             args.messageFilter = lambda x: filter_(x) and x['author']['id'] == args.filterFrom
         else:
             args.messageFilter = lambda x: x['author']['id'] == args.filterFrom
+    if 'messageFilter' not in args.__dict__:
+        args.messageFilter = discord_api.nop
 
     # todo: implement search        
 
