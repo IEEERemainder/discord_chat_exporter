@@ -39,6 +39,10 @@ def common_logic(targets, fn, projector=discord_api.nop, onChannelFinished=disco
         processedChannels.append(channelId)
 
         totalCountJSON = args.estimate and api.get_channel_message_count_json(channelId, supressErrors = True) or {'total_results': 1000}
+        if not args.estimate:
+            q = api.query(api.baseUrl + f"channels/{channelId}/messages?limit=1", supressErrors=True)
+            if 'message' in q:
+                totalCountJSON = q
         
         if 'message' in totalCountJSON:
             print(f'error while exporing {channelId}: {totalCountJSON["message"]}')
