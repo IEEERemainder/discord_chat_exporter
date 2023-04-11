@@ -22,6 +22,7 @@ Certain activities via API directly, unattainable from official Discord client, 
 - Implement full database schema
 - Move underlying layer logic to the discord_chat_exporter.py, allowing to export whole server (whole Dm, only people, ...) with no help of gui.py (G819821, DM, DM_PEOPLE, DM_GROUPS)
 - Add threads and forums support
+- Update discord_api, which had incorrect assume ns is 1e-6 instead of 1e-9 (will affect max throughput)
 
 ## Have ideas or need help? 
 Create issue or concat me via nosare@yandex.ru or Interlocked#6505
