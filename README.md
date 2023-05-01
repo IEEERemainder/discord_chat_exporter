@@ -1,5 +1,7 @@
 # discord_chat_exporter
 
+## Currently broken, wait until I'll fully test it (desync of file version & laziness lead to major errors in both this project and discord_api then I tried to dump part of the guild)
+
 ## Features
 - Download discord channels in DMs or guilds, with no bot setup needed (for example if server admins doesn't allow to (but you take into account why and try to don't violate a lot, for example, for backup needs (I was an admin at server whose 50% of channels had been deleted irrevocably by the fired admin)))
 - CLI support (discord_chat_exporter.py)
