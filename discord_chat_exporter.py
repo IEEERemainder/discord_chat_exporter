@@ -65,8 +65,8 @@ def common_logic(targets, fn, projector=discord_api.nop, onChannelFinished=disco
             ):
             fn(targets, msg_chunk, channelId, *args2)
             downloadedCount += len(msg_chunk)
+            onChannelFinished(*args2)
         currentChannelIndex += 1
-        onChannelFinished(*args2)
         print() # reset \r       
         
 def parse_datetime(v): 
